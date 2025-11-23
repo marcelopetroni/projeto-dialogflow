@@ -88,7 +88,7 @@ class WebhookService {
 			: intentName === 'Informar nome' ? this.handleInformName(requestBody, session)
 			: intentName === 'Informar celular' ? this.handleInformPhone(requestBody, session)
 			: intentName === 'Confirmar agendamento' ? this.handleConfirmAttendance(session)
-			: intentName === 'Cancelar agendamento' ? this.handleCancelAppointment(parameters)
+			: intentName === 'Confirmar cancelamento' ? this.handleCancelAppointment(requestBody, session)
 			: { fulfillmentText: 'Não entendi sua solicitação.' }
 	}
 
@@ -310,19 +310,31 @@ class WebhookService {
 		}
 	}
 
-	async handleCancelAppointment(parameters) {
-		const appointmentId = parameters?.appointment_id
+	async handleCancelAppointment(requestBody, session) {
+		const parameters = requestBody.queryResult.parameters || {};
+		const scheduleId = parameters?.number || parameters?.scheduleId || parameters?.any;
 
-		if (!appointmentId) {
-			return { fulfillmentText: 'Informe o ID do agendamento.' }
+		if (!scheduleId) {
+			return {
+				fulfillmentText: 'Por favor, informe o ID do agendamento que deseja cancelar.'
+			};
 		}
 
 		try {
-			await this.scheduleService.cancelSchedule(appointmentId)
-			return { fulfillmentText: 'Agendamento cancelado com sucesso.' }
+			await this.scheduleService.cancelSchedule(scheduleId);
+
+			this.clearSessionData(session);
+
+			return {
+				fulfillmentText: '✅ Agendamento cancelado com sucesso! O horário foi liberado e está disponível novamente.',
+				outputContexts: []
+			};
 		} catch (error) {
 			console.error('Erro ao cancelar agendamento:', error);
-			return { fulfillmentText: 'Erro ao cancelar o agendamento.' }
+			return {
+				fulfillmentText: `Erro ao cancelar o agendamento: ${error.message}. Tente novamente.`,
+				outputContexts: []
+			};
 		}
 	}
 }

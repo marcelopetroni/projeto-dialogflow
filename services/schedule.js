@@ -154,7 +154,7 @@ class ScheduleService {
         }
 
         await schedule.update({
-            status: 'cancelled',
+            status: 'available',
             patient_name: null,
             patient_phone: null,
             booked_at: null
