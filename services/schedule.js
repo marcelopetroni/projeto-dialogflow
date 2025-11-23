@@ -1,5 +1,6 @@
 import Doctor from '../models/Doctor.js';
 import Schedule from '../models/Schedule.js';
+import securityUtils from '../utils/security.js';
 
 class ScheduleService {
     constructor() {
@@ -59,10 +60,17 @@ class ScheduleService {
             throw new Error('Horário não está mais disponível');
         }
 
+        const hashedName = patientData.patient_name
+            ? await securityUtils.hashName(patientData.patient_name)
+            : null;
+        const hashedPhone = patientData.patient_phone
+            ? await securityUtils.hashPhone(patientData.patient_phone)
+            : null;
+
         await schedule.update({
             status: 'booked',
-            patient_name: patientData.patient_name,
-            patient_phone: patientData.patient_phone,
+            patient_name: hashedName,
+            patient_phone: hashedPhone,
             booked_at: new Date()
         });
 
@@ -74,8 +82,8 @@ class ScheduleService {
                 doctor_id: schedule.doctor_id,
                 date: schedule.date,
                 time: schedule.time,
-                patient_name: schedule.patient_name,
-                patient_phone: schedule.patient_phone
+                patient_name: patientData.patient_name,
+                patient_phone: patientData.patient_phone
             }
         };
     }
@@ -94,10 +102,17 @@ class ScheduleService {
             throw new Error('Horário não está disponível');
         }
 
+        const hashedName = patientData.patient_name
+            ? await securityUtils.hashName(patientData.patient_name)
+            : null;
+        const hashedPhone = patientData.patient_phone
+            ? await securityUtils.hashPhone(patientData.patient_phone)
+            : null;
+
         await existingSchedule.update({
             status: 'booked',
-            patient_name: patientData.patient_name,
-            patient_phone: patientData.patient_phone,
+            patient_name: hashedName,
+            patient_phone: hashedPhone,
             booked_at: new Date()
         });
 
@@ -106,8 +121,8 @@ class ScheduleService {
             doctor_id: existingSchedule.doctor_id,
             date: existingSchedule.date,
             time: existingSchedule.time,
-            patient_name: existingSchedule.patient_name,
-            patient_phone: existingSchedule.patient_phone,
+            patient_name: patientData.patient_name,
+            patient_phone: patientData.patient_phone,
             booked_at: existingSchedule.booked_at
         };
     }
@@ -123,10 +138,17 @@ class ScheduleService {
             throw new Error('Horário não está mais disponível');
         }
 
+        const hashedName = patientData.patient_name
+            ? await securityUtils.hashName(patientData.patient_name)
+            : null;
+        const hashedPhone = patientData.patient_phone
+            ? await securityUtils.hashPhone(patientData.patient_phone)
+            : null;
+
         await schedule.update({
             status: 'booked',
-            patient_name: patientData.patient_name,
-            patient_phone: patientData.patient_phone,
+            patient_name: hashedName,
+            patient_phone: hashedPhone,
             booked_at: new Date()
         });
 
@@ -135,8 +157,8 @@ class ScheduleService {
             doctor_id: schedule.doctor_id,
             date: schedule.date,
             time: schedule.time,
-            patient_name: schedule.patient_name,
-            patient_phone: schedule.patient_phone,
+            patient_name: patientData.patient_name,
+            patient_phone: patientData.patient_phone,
             booked_at: schedule.booked_at,
             message: 'Agendamento confirmado com sucesso'
         };

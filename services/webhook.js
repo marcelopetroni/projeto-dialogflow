@@ -1,6 +1,7 @@
 import DoctorService from './doctor.js'
 import ScheduleService from './schedule.js'
 import moment from 'moment'
+import securityUtils from '../utils/security.js'
 
 class WebhookService {
 	constructor() {
@@ -198,13 +199,16 @@ class WebhookService {
 
 		const patientName = parameters?.any || parameters?.patient_name || parameters?.person?.name;
 
-		if (!patientName) {
-			return { fulfillmentText: 'Por favor, informe seu nome completo.' };
-		}
+        if (!patientName) {
+            return { fulfillmentText: 'Por favor, informe seu nome completo.' };
+        }
 
-		this.setSessionData(session, {
-			patientName
-		});
+        const hashedName = await securityUtils.hashName(patientName);
+
+        this.setSessionData(session, {
+            patientName: hashedName,
+            patientNameOriginal: patientName
+        });
 
 		return {
 			fulfillmentText: `Obrigado, ${patientName}! Agora, por favor, me informe seu telefone para contato:`,
@@ -230,16 +234,19 @@ class WebhookService {
 
 		const patientPhone = parameters?.['phone-number'] || parameters?.phone_number || parameters?.any;
 
-		if (!patientPhone) {
-			return { fulfillmentText: 'Por favor, informe seu telefone.' };
-		}
+        if (!patientPhone) {
+            return { fulfillmentText: 'Por favor, informe seu telefone.' };
+        }
 
-		this.setSessionData(session, {
-			patientPhone
-		});
+        const hashedPhone = await securityUtils.hashPhone(patientPhone);
+
+        this.setSessionData(session, {
+            patientPhone: hashedPhone,
+            patientPhoneOriginal: patientPhone
+        });
 
 		const scheduleTime = sessionData.scheduleTime || previous.scheduleTime;
-		const patientName = sessionData.patientName || previous.patientName;
+		const patientName = sessionData.patientNameOriginal || previous.patientName;
 
 		return {
 			fulfillmentText: `Perfeito! Vamos confirmar seu agendamento:\n\n📅 Data: ${moment().format('DD/MM/YYYY')}\n⏰ Horário: ${moment(scheduleTime, 'HH:mm:ss').format('HH:mm')}\n👤 Nome: ${patientName}\n📞 Telefone: ${patientPhone}\n\nConfirma o agendamento? (Digite "sim" para confirmar)`,
@@ -273,13 +280,16 @@ class WebhookService {
 	async handleConfirmAttendance(session) {
 		const sessionData = this.getSessionData(session);
 
+		const patientNameOriginal = sessionData.patientNameOriginal;
+		const patientPhoneOriginal = sessionData.patientPhoneOriginal;
+
 		const data = {
 			doctorId: sessionData.doctorId,
 			scheduleId: sessionData.scheduleId,
 			scheduleTime: sessionData.scheduleTime,
 			scheduleDate: sessionData.scheduleDate,
-			patientName: sessionData.patientName,
-			patientPhone: sessionData.patientPhone,
+			patientName: patientNameOriginal,
+			patientPhone: patientPhoneOriginal,
 		};
 
 		if (!data.scheduleId || !data.patientName || !data.patientPhone) {

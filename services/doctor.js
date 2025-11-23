@@ -1,5 +1,6 @@
 import Doctor from '../models/Doctor.js';
 import Schedule from '../models/Schedule.js';
+import securityUtils from '../utils/security.js';
 
 class DoctorService {
     constructor() {
@@ -89,14 +90,52 @@ class DoctorService {
     }
 
     async createDoctor(doctorData) {
-        const doctor = await this.Doctor.create(doctorData);
-        return doctor;
+        const dataToSave = { ...doctorData };
+        const originalEmail = dataToSave.email;
+        const originalPhone = dataToSave.phone;
+
+        if (dataToSave.email) {
+            dataToSave.email = await securityUtils.hashEmail(dataToSave.email);
+        }
+
+        if (dataToSave.phone) {
+            dataToSave.phone = await securityUtils.hashPhone(dataToSave.phone);
+        }
+
+        const doctor = await this.Doctor.create(dataToSave);
+
+        const doctorJson = doctor.get ? doctor.get({ plain: true }) : doctor;
+        return {
+            ...doctorJson,
+            email: originalEmail,
+            phone: originalPhone
+        };
     }
 
     async updateDoctor(id, doctorData) {
         const doctor = await this.getDoctorById(id);
-        await doctor.update(doctorData);
-        return doctor;
+
+        const dataToUpdate = { ...doctorData };
+        const originalEmail = dataToUpdate.email;
+        const originalPhone = dataToUpdate.phone;
+
+        if (dataToUpdate.email) {
+            dataToUpdate.email = await securityUtils.hashEmail(dataToUpdate.email);
+        }
+
+        if (dataToUpdate.phone) {
+            dataToUpdate.phone = await securityUtils.hashPhone(dataToUpdate.phone);
+        }
+
+        await doctor.update(dataToUpdate);
+        await doctor.reload();
+
+        const doctorJson = doctor.get ? doctor.get({ plain: true }) : doctor;
+        return {
+            ...doctorJson,
+            email: originalEmail !== undefined ? originalEmail : doctorJson.email,
+            phone: originalPhone !== undefined ? originalPhone : doctorJson.phone
+        };
     }
 
     async deleteDoctor(id) {

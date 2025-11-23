@@ -20,7 +20,7 @@ const Doctor = sequelize.define('Doctor', {
         allowNull: true
     },
     phone: {
-        type: DataTypes.STRING(20),
+        type: DataTypes.STRING(255),
         allowNull: true
     },
     active: {

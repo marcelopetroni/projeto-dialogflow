@@ -28,7 +28,7 @@ const Schedule = sequelize.define('Schedule', {
         allowNull: true
     },
     patient_phone: {
-        type: DataTypes.STRING(20),
+        type: DataTypes.STRING(255),
         allowNull: true
     },
     status: {
